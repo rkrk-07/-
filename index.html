@@ -616,6 +616,10 @@ button {
   border: 2px solid transparent;
   border-radius: 9px;
   padding: 8px 4px;
+  color: var(--text);
+  background-clip: padding-box;
+  -webkit-appearance: none;
+  appearance: none;
   font-size: 13px;
   font-weight: bold;
 }
@@ -757,6 +761,144 @@ button {
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 12px;
   margin: 18px 0;
+}
+
+.link-page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.link-page-header h2 {
+  margin: 0;
+}
+
+.link-add-button {
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  font-size: 26px;
+}
+
+.link-list {
+  display: grid;
+  gap: 12px;
+  margin-top: 18px;
+}
+
+.link-card {
+  display: grid;
+  grid-template-columns: 48px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: white;
+}
+
+.link-card.disabled {
+  opacity: 0.58;
+}
+
+.link-card-icon {
+  display: flex;
+  width: 48px;
+  height: 48px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  font-size: 24px;
+}
+
+.link-card-info {
+  min-width: 0;
+}
+
+.link-card-title {
+  display: block;
+  margin-bottom: 4px;
+  color: var(--text);
+  font-weight: bold;
+  text-decoration: none;
+  overflow-wrap: anywhere;
+}
+
+.link-card-url {
+  color: var(--muted);
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+
+.link-card-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.link-card-actions button {
+  min-width: 36px;
+  min-height: 36px;
+  border: 0;
+  border-radius: 8px;
+  background: var(--accent-soft);
+  color: var(--text);
+  font-size: 16px;
+}
+
+.link-card-actions .link-toggle {
+  width: 42px;
+  min-width: 42px;
+  min-height: 28px;
+  accent-color: var(--accent);
+}
+
+.link-icon-options,
+.link-color-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.link-icon-option,
+.link-color-option {
+  width: 42px;
+  height: 42px;
+  border: 2px solid transparent;
+  border-radius: 10px;
+  background: var(--background);
+  font-size: 20px;
+}
+
+.link-icon-option.selected,
+.link-color-option.selected {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent);
+}
+
+.link-color-option {
+  border-radius: 50%;
+}
+
+.link-preview {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--accent-soft);
+}
+
+.link-preview-title {
+  font-weight: bold;
+}
+
+.link-preview-url {
+  color: var(--muted);
+  font-size: 13px;
+  overflow-wrap: anywhere;
 }
 
 .summary-card {
@@ -905,6 +1047,13 @@ button {
     border-radius: 14px;
   }
 
+  .calendar-card {
+    margin-right: -8px;
+    margin-left: -8px;
+    padding: 10px 4px;
+    border-radius: 0;
+  }
+
   .calendar-header {
     gap: 4px;
     margin-bottom: 12px;
@@ -1005,6 +1154,23 @@ button {
     grid-template-columns: 1fr;
   }
 
+  .link-card {
+    grid-template-columns: 40px minmax(0, 1fr);
+    gap: 9px;
+    padding: 11px;
+  }
+
+  .link-card-icon {
+    width: 40px;
+    height: 40px;
+    font-size: 21px;
+  }
+
+  .link-card-actions {
+    grid-column: 1 / -1;
+    justify-content: flex-end;
+  }
+
   .summary-value {
     font-size: 18px;
   }
@@ -1029,7 +1195,7 @@ button {
   }
 
   .calendar-card {
-    padding: 7px;
+    padding: 8px 3px;
   }
 
   .month-title {
@@ -1183,6 +1349,16 @@ button {
     提出状況はこの一覧から変更できます。
   </p>
 </section>
+
+<section class="subpage" id="linksPage">
+  <button class="back-button" data-back>← カレンダーに戻る</button>
+  <div class="link-page-header">
+    <h2>🔗 リンク管理</h2>
+    <button class="primary-button link-add-button" id="addLinkButton" aria-label="リンクを追加">＋</button>
+  </div>
+  <p class="note">よく使うページを登録できます。リンクはこのブラウザに保存されます。</p>
+  <div class="link-list" id="linkList"></div>
+</section>
 </main>
 </div>
 
@@ -1288,6 +1464,58 @@ button {
   </div>
 </div>
 
+<div class="modal-backdrop" id="linkModal">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="linkModalTitle">
+    <div class="modal-header">
+      <h2 id="linkModalTitle">リンクを追加</h2>
+      <button class="close-button" id="closeLinkModal" type="button" aria-label="閉じる">×</button>
+    </div>
+    <form id="linkForm">
+      <div class="form-group">
+        <label for="linkTitleInput">タイトル</label>
+        <input id="linkTitleInput" type="text" maxlength="60" required placeholder="例：manaba">
+      </div>
+      <div class="form-group">
+        <label for="linkUrlInput">URL</label>
+        <input id="linkUrlInput" type="text" inputmode="url" autocapitalize="off" autocomplete="url" required placeholder="https://example.com">
+      </div>
+      <div class="form-group">
+        <div class="type-heading">アイコン</div>
+        <div class="link-icon-options" id="linkIconOptions">
+          <button type="button" class="link-icon-option selected" data-icon="🔗" aria-label="リンク">🔗</button>
+          <button type="button" class="link-icon-option" data-icon="🌐" aria-label="ウェブ">🌐</button>
+          <button type="button" class="link-icon-option" data-icon="🎓" aria-label="学校">🎓</button>
+          <button type="button" class="link-icon-option" data-icon="📚" aria-label="本">📚</button>
+          <button type="button" class="link-icon-option" data-icon="📝" aria-label="メモ">📝</button>
+          <button type="button" class="link-icon-option" data-icon="⭐" aria-label="お気に入り">⭐</button>
+        </div>
+      </div>
+      <div class="form-group">
+        <div class="type-heading">カラー</div>
+        <div class="link-color-options" id="linkColorOptions">
+          <button type="button" class="link-color-option selected" data-color="#2196e9" style="background:#2196e9" aria-label="青"></button>
+          <button type="button" class="link-color-option" data-color="#4caf50" style="background:#4caf50" aria-label="緑"></button>
+          <button type="button" class="link-color-option" data-color="#f44336" style="background:#f44336" aria-label="赤"></button>
+          <button type="button" class="link-color-option" data-color="#ff9800" style="background:#ff9800" aria-label="オレンジ"></button>
+          <button type="button" class="link-color-option" data-color="#9c27b0" style="background:#9c27b0" aria-label="紫"></button>
+          <button type="button" class="link-color-option" data-color="#009688" style="background:#009688" aria-label="青緑"></button>
+        </div>
+      </div>
+      <div class="form-group">
+        <div class="type-heading">プレビュー</div>
+        <div class="link-preview">
+          <div class="link-card-icon" id="linkPreviewIcon" style="background:#2196e9;color:white">🔗</div>
+          <div><div class="link-preview-title" id="linkPreviewTitle">タイトル</div><div class="link-preview-url" id="linkPreviewUrl">URL</div></div>
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="secondary-button" id="cancelLinkModal">キャンセル</button>
+        <button type="submit" class="primary-button" id="saveLinkButton">追加</button>
+      </div>
+    </form>
+  </div>
+</div>
+
 <div class="drawer-backdrop" id="drawerBackdrop">
   <aside class="drawer">
     <div class="drawer-header">
@@ -1297,9 +1525,11 @@ button {
     <button class="drawer-link" data-page="calendarPage">📅 カレンダー</button>
     <button class="drawer-link" data-page="wagePage">💰 給料計算</button>
     <button class="drawer-link" data-page="assignmentPage">📝 課題一覧</button>
+    <button class="drawer-link" data-page="linksPage">🔗 リンク管理</button>
     <a class="drawer-link" href="https://cit.manaba.jp/ct/home" target="_blank" rel="noopener noreferrer">
       🎓 manabaを開く ↗
     </a>
+    <div id="menuCustomLinks"></div>
     <section class="theme-section" aria-labelledby="themeTitle">
       <div class="theme-title" id="themeTitle">🎨 カラー変更</div>
       <div class="theme-options" id="themeOptions">
@@ -1321,6 +1551,7 @@ const EVENT_KEY = "scheduleEvents_v4";
 const WAGE_KEY = "scheduleHourlyWage_v1";
 const HOLIDAY_WAGE_KEY = "scheduleHolidayHourlyWage_v1";
 const NOTIFICATION_KEY = "scheduleNotifications_v1";
+const LINK_KEY = "scheduleLinks_v1";
 
 const NOTIFICATION_DAYS = [14, 7, 3, 2, 1];
 const NOTIFICATION_HOUR = 13;
@@ -1591,6 +1822,32 @@ function loadArray(key) {
 }
 
 let events = loadArray(EVENT_KEY);
+
+function loadLinks() {
+  const savedLinks = localStorage.getItem(LINK_KEY);
+  if (savedLinks !== null) {
+    try {
+      const parsed = JSON.parse(savedLinks);
+      return Array.isArray(parsed) ? parsed : [];
+    } catch {
+      return [];
+    }
+  }
+  return [{
+    id: "manaba-default",
+    title: "manaba",
+    url: "https://cit.manaba.jp/ct/home",
+    icon: "🎓",
+    color: "#9c27b0",
+    enabled: true
+  }];
+}
+
+let links = loadLinks();
+
+function saveLinks() {
+  localStorage.setItem(LINK_KEY, JSON.stringify(links));
+}
 
 function saveEvents() {
   localStorage.setItem(EVENT_KEY, JSON.stringify(events));
@@ -2594,6 +2851,209 @@ deleteScopeModal.querySelectorAll("[data-delete-scope]").forEach(button => {
    メニュー
 ===================================== */
 
+const linkList = document.getElementById("linkList");
+const linkModal = document.getElementById("linkModal");
+const linkForm = document.getElementById("linkForm");
+const linkTitleInput = document.getElementById("linkTitleInput");
+const linkUrlInput = document.getElementById("linkUrlInput");
+let editingLinkId = null;
+let selectedLinkIcon = "🔗";
+let selectedLinkColor = "#2196e9";
+
+function normalizeLinkUrl(value) {
+  const candidate = /^https?:\/\//i.test(value.trim())
+    ? value.trim()
+    : `https://${value.trim()}`;
+  try {
+    const parsed = new URL(candidate);
+    return ["http:", "https:"].includes(parsed.protocol)
+      ? parsed.href
+      : null;
+  } catch {
+    return null;
+  }
+}
+
+function renderLinks() {
+  renderMenuLinks();
+  if (!linkList) return;
+  if (links.length === 0) {
+    linkList.innerHTML = '<div class="empty-message">リンクはまだありません。「＋」から追加できます。</div>';
+    return;
+  }
+
+  linkList.innerHTML = links.map((item, index) => {
+    const safeUrl = normalizeLinkUrl(String(item.url || ""));
+    const safeColor = /^#[0-9a-f]{6}$/i.test(item.color || "") ? item.color : "#2196e9";
+    const linkTitle = item.enabled && safeUrl
+      ? `<a class="link-card-title" href="${escapeHTML(safeUrl)}" target="_blank" rel="noopener noreferrer">${escapeHTML(item.title || "リンク")}</a>`
+      : `<span class="link-card-title">${escapeHTML(item.title || "リンク")}</span>`;
+    const shownUrl = safeUrl ? safeUrl.replace(/^https?:\/\//i, "").replace(/\/$/, "") : "URLが正しくありません";
+
+    return `
+      <article class="link-card ${item.enabled ? "" : "disabled"}">
+        <div class="link-card-icon" style="background:${safeColor};color:white">${escapeHTML(item.icon || "🔗")}</div>
+        <div class="link-card-info">
+          ${linkTitle}
+          <div class="link-card-url">${escapeHTML(shownUrl)}</div>
+        </div>
+        <div class="link-card-actions">
+          <input class="link-toggle" type="checkbox" data-link-toggle="${escapeHTML(item.id)}" aria-label="${escapeHTML(item.title || "リンク")}を有効にする" ${item.enabled ? "checked" : ""}>
+          <button type="button" data-link-edit="${escapeHTML(item.id)}" aria-label="編集">✎</button>
+          <button type="button" data-link-move="up" data-link-id="${escapeHTML(item.id)}" aria-label="上へ" ${index === 0 ? "disabled" : ""}>↑</button>
+          <button type="button" data-link-move="down" data-link-id="${escapeHTML(item.id)}" aria-label="下へ" ${index === links.length - 1 ? "disabled" : ""}>↓</button>
+          <button type="button" data-link-delete="${escapeHTML(item.id)}" aria-label="削除">×</button>
+        </div>
+      </article>`;
+  }).join("");
+}
+
+function renderMenuLinks() {
+  const container = document.getElementById("menuCustomLinks");
+  if (!container) return;
+  container.innerHTML = links
+    .filter(item => item.enabled && item.id !== "manaba-default")
+    .map(item => {
+      const url = normalizeLinkUrl(String(item.url || ""));
+      if (!url) return "";
+      return `<a class="drawer-link" href="${escapeHTML(url)}" target="_blank" rel="noopener noreferrer">${escapeHTML(item.icon || "🔗")} ${escapeHTML(item.title || "リンク")}を開く ↗</a>`;
+    })
+    .join("");
+}
+
+function updateLinkPreview() {
+  const previewIcon = document.getElementById("linkPreviewIcon");
+  previewIcon.textContent = selectedLinkIcon;
+  previewIcon.style.background = selectedLinkColor;
+  document.getElementById("linkPreviewTitle").textContent = linkTitleInput.value.trim() || "タイトル";
+  document.getElementById("linkPreviewUrl").textContent = linkUrlInput.value.trim() || "URL";
+}
+
+function openLinkModal(id = null) {
+  editingLinkId = id;
+  const item = links.find(link => link.id === id);
+  document.getElementById("linkModalTitle").textContent = item ? "リンクを編集" : "リンクを追加";
+  document.getElementById("saveLinkButton").textContent = item ? "保存" : "追加";
+  linkTitleInput.value = item?.title || "";
+  linkUrlInput.value = item?.url || "";
+  selectedLinkIcon = item?.icon || "🔗";
+  selectedLinkColor = /^#[0-9a-f]{6}$/i.test(item?.color || "") ? item.color : "#2196e9";
+  document.querySelectorAll(".link-icon-option").forEach(button => {
+    button.classList.toggle("selected", button.dataset.icon === selectedLinkIcon);
+  });
+  document.querySelectorAll(".link-color-option").forEach(button => {
+    button.classList.toggle("selected", button.dataset.color === selectedLinkColor);
+  });
+  updateLinkPreview();
+  linkModal.classList.add("open");
+  linkTitleInput.focus();
+}
+
+function closeLinkModal() {
+  linkModal.classList.remove("open");
+  editingLinkId = null;
+  linkForm.reset();
+}
+
+document.getElementById("addLinkButton").addEventListener("click", () => openLinkModal());
+document.getElementById("closeLinkModal").addEventListener("click", closeLinkModal);
+document.getElementById("cancelLinkModal").addEventListener("click", closeLinkModal);
+linkModal.addEventListener("click", event => {
+  if (event.target === linkModal) closeLinkModal();
+});
+linkTitleInput.addEventListener("input", updateLinkPreview);
+linkUrlInput.addEventListener("input", updateLinkPreview);
+
+document.getElementById("linkIconOptions").addEventListener("click", event => {
+  const button = event.target.closest("[data-icon]");
+  if (!button) return;
+  selectedLinkIcon = button.dataset.icon;
+  document.querySelectorAll(".link-icon-option").forEach(option => {
+    option.classList.toggle("selected", option === button);
+  });
+  updateLinkPreview();
+});
+
+document.getElementById("linkColorOptions").addEventListener("click", event => {
+  const button = event.target.closest("[data-color]");
+  if (!button) return;
+  selectedLinkColor = button.dataset.color;
+  document.querySelectorAll(".link-color-option").forEach(option => {
+    option.classList.toggle("selected", option === button);
+  });
+  updateLinkPreview();
+});
+
+linkForm.addEventListener("submit", event => {
+  event.preventDefault();
+  const title = linkTitleInput.value.trim();
+  const url = normalizeLinkUrl(linkUrlInput.value);
+  if (!title) {
+    alert("リンク名を入力してください。");
+    return;
+  }
+  if (!url) {
+    alert("http:// または https:// で始まるURLを入力してください。");
+    linkUrlInput.focus();
+    return;
+  }
+
+  const existing = links.find(item => item.id === editingLinkId);
+  const updated = {
+    id: editingLinkId || makeId(),
+    title,
+    url,
+    icon: selectedLinkIcon,
+    color: selectedLinkColor,
+    enabled: existing ? existing.enabled : true
+  };
+  if (editingLinkId) {
+    links = links.map(item => item.id === editingLinkId ? updated : item);
+  } else {
+    links.push(updated);
+  }
+  saveLinks();
+  renderLinks();
+  closeLinkModal();
+});
+
+linkList.addEventListener("change", event => {
+  const id = event.target.dataset.linkToggle;
+  if (!id) return;
+  links = links.map(item => item.id === id ? { ...item, enabled: event.target.checked } : item);
+  saveLinks();
+  renderLinks();
+});
+
+linkList.addEventListener("click", event => {
+  const editButton = event.target.closest("[data-link-edit]");
+  if (editButton) {
+    openLinkModal(editButton.dataset.linkEdit);
+    return;
+  }
+  const deleteButton = event.target.closest("[data-link-delete]");
+  if (deleteButton) {
+    const item = links.find(link => link.id === deleteButton.dataset.linkDelete);
+    if (item && confirm(`「${item.title}」を削除しますか？`)) {
+      links = links.filter(link => link.id !== item.id);
+      saveLinks();
+      renderLinks();
+    }
+    return;
+  }
+  const moveButton = event.target.closest("[data-link-move]");
+  if (moveButton) {
+    const index = links.findIndex(item => item.id === moveButton.dataset.linkId);
+    const nextIndex = index + (moveButton.dataset.linkMove === "up" ? -1 : 1);
+    if (index < 0 || nextIndex < 0 || nextIndex >= links.length) return;
+    [links[index], links[nextIndex]] = [links[nextIndex], links[index]];
+    saveLinks();
+    renderLinks();
+  }
+});
+
+renderLinks();
+
 const drawerBackdrop =
   document.getElementById("drawerBackdrop");
 
@@ -2630,6 +3090,10 @@ function showPage(pageId) {
 
   if (pageId === "assignmentPage") {
     renderAssignments();
+  }
+
+  if (pageId === "linksPage") {
+    renderLinks();
   }
 }
 

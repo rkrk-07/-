@@ -1,0 +1,3034 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>スケジュール帳</title>
+
+<style>
+:root {
+  --background: #f5f7fb;
+  --accent: #e986a2;
+  --accent-soft: #fde7ed;
+  --accent-border: #e9a4b6;
+  --white: #ffffff;
+  --text: #273142;
+  --muted: #8993a4;
+  --border: #e6eaf0;
+  --school: #8dd8f5;
+  --work: #ffb36b;
+  --task: #c4a3f7;
+  --holiday: #ed5555;
+  --saturday: #529ce3;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Meiryo", sans-serif;
+  background: var(--background);
+  color: var(--text);
+}
+
+button, input, select, textarea {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+.app {
+  max-width: 1500px;
+  margin: auto;
+  padding: 24px;
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.menu-button {
+  width: 46px;
+  height: 46px;
+  border: none;
+  border-radius: 12px;
+  background: white;
+  font-size: 25px;
+}
+
+.topbar-title {
+  flex: 1;
+  font-size: 22px;
+  font-weight: bold;
+}
+
+.primary-button,
+.add-button {
+  padding: 12px 18px;
+  border: none;
+  border-radius: 10px;
+  background: var(--accent);
+  color: white;
+  font-weight: bold;
+}
+
+.calendar-card,
+.selected-date-card,
+.subpage {
+  background: white;
+  border-radius: 18px;
+  padding: 22px;
+  box-shadow: 0 4px 20px #25385808;
+}
+
+.calendar-header {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.month-title {
+  margin: 0;
+  font-size: 28px;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.month-navigation {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.month-navigation button {
+  width: 40px;
+  height: 40px;
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  font-size: 22px;
+}
+
+.month-navigation button:hover {
+  background: var(--accent-soft);
+}
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-start;
+  gap: 10px;
+  font-size: 12px;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.legend-dot {
+  width: 11px;
+  height: 11px;
+  border-radius: 4px;
+  display: inline-block;
+  flex-shrink: 0;
+}
+
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  border-top: 1px solid var(--border);
+  border-left: 1px solid var(--border);
+}
+
+.weekday {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 42px;
+  background: var(--accent-soft);
+  font-weight: bold;
+  border-right: 1px solid var(--accent-border);
+  border-bottom: 1px solid var(--accent-border);
+}
+
+.weekday:first-child {
+  color: var(--holiday);
+}
+
+.weekday:last-child {
+  color: var(--saturday);
+}
+
+.day {
+  min-width: 0;
+  min-height: 125px;
+  padding: 7px;
+  background: white;
+  border-right: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+  overflow-wrap: anywhere;
+}
+
+.day:hover {
+  background: #f7fbff;
+}
+
+.day.empty {
+  background: #fafbfd;
+  cursor: default;
+}
+
+.day.today {
+  background: var(--accent-soft);
+}
+
+.day.selected {
+  box-shadow: inset 0 0 0 2px var(--accent-border);
+}
+
+.day-number {
+  display: flex;
+  width: 28px;
+  height: 28px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  font-weight: bold;
+  font-size: 14px;
+  margin-bottom: 5px;
+}
+
+.day-number.red-date {
+  color: var(--holiday);
+}
+
+.day-number.blue-date {
+  color: var(--saturday);
+}
+
+.day.today .day-number {
+  color: white;
+  background: var(--accent);
+}
+
+.day.today .day-number.red-date {
+  background: var(--holiday);
+  color: white;
+}
+
+.holiday-name {
+  margin: -2px 0 5px;
+  color: var(--holiday);
+  font-size: 10px;
+  line-height: 1.3;
+  font-weight: bold;
+  overflow-wrap: anywhere;
+}
+
+.event-chip {
+  display: block;
+  width: 100%;
+  padding: 4px 5px;
+  margin: 3px 0;
+  border: none;
+  border-left: 3px solid transparent;
+  border-radius: 5px;
+  text-align: left;
+  font-size: 11px;
+  color: #273142;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.event-chip.school {
+  background: #d8f3ff;
+  border-left-color: #72c9ec;
+}
+
+.event-chip.work {
+  background: #ffead7;
+  border-left-color: #ffa354;
+}
+
+.event-chip.task {
+  background: #eee3ff;
+  border-left-color: #b08aef;
+}
+
+.event-chip.other {
+  background: #e2f2e8;
+  border-left-color: #72b889;
+}
+
+.more-events {
+  padding-left: 4px;
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.selected-date-card {
+  margin-top: 20px;
+}
+
+.selected-date-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+
+.selected-date-header h2 {
+  margin: 0;
+  font-size: 18px;
+}
+
+.selected-event {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 4px;
+  border-bottom: 1px solid var(--border);
+}
+
+.selected-event:last-child {
+  border-bottom: none;
+}
+
+.selected-event-info {
+  min-width: 0;
+}
+
+.selected-event-title {
+  font-weight: bold;
+  overflow-wrap: anywhere;
+}
+
+.selected-event-meta {
+  margin-top: 5px;
+  font-size: 12px;
+  color: var(--muted);
+  overflow-wrap: anywhere;
+}
+
+.event-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.small-button,
+.secondary-button {
+  padding: 8px 11px;
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+.danger-button {
+  padding: 8px 11px;
+  background: #fff3f3;
+  color: #cf4545;
+  border: 1px solid #f0caca;
+  border-radius: 8px;
+}
+
+.empty-message {
+  padding: 22px 0;
+  text-align: center;
+  color: var(--muted);
+}
+
+/* =====================================
+   通知ボックス
+===================================== */
+
+.notification-area {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 300;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  pointer-events: none;
+}
+
+.notification-box {
+  position: relative;
+  width: 100%;
+  min-height: 33vh;
+  max-height: 70vh;
+  overflow-y: auto;
+  padding: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.72);
+  border-radius: 24px;
+  background: linear-gradient(135deg,
+    rgba(255, 255, 255, 0.68),
+    rgba(232, 244, 255, 0.48)
+  );
+  backdrop-filter: blur(28px) saturate(1.6);
+  -webkit-backdrop-filter: blur(28px) saturate(1.6);
+  box-shadow: 0 12px 40px rgba(35, 57, 82, 0.18),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  cursor: pointer;
+  pointer-events: auto;
+  animation: notificationAppear 0.35s ease;
+  transition: transform 0.2s, background 0.2s, box-shadow 0.2s;
+}
+
+.notification-box:hover {
+  transform: translateY(-2px);
+  background: linear-gradient(135deg,
+    rgba(255, 255, 255, 0.76),
+    rgba(232, 244, 255, 0.58)
+  );
+  box-shadow: 0 16px 46px rgba(35, 57, 82, 0.22),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+
+@keyframes notificationAppear {
+  from {
+    opacity: 0;
+    transform: translateY(-15px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.notification-top {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin-bottom: 9px;
+}
+
+.notification-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  background: #e5f4ff;
+  font-size: 17px;
+}
+
+.notification-heading {
+  flex: 1;
+  font-size: 13px;
+  font-weight: bold;
+  color: #4d9dc7;
+}
+
+.notification-count {
+  padding: 3px 8px;
+  border-radius: 20px;
+  background: #e5f4ff;
+  color: #438db5;
+  font-size: 11px;
+  font-weight: bold;
+}
+
+.notification-event-list {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.notification-event {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 9px 10px;
+  border-radius: 9px;
+  border: 1px solid rgba(255, 255, 255, 0.58);
+  background: rgba(255, 255, 255, 0.38);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5);
+}
+
+.notification-event-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.notification-event-info {
+  min-width: 0;
+  flex: 1;
+}
+
+.notification-event-name {
+  font-size: 13px;
+  font-weight: bold;
+  overflow-wrap: anywhere;
+}
+
+.notification-event-date {
+  margin-top: 3px;
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.notification-footer {
+  margin-top: 10px;
+  font-size: 11px;
+  color: #7d8999;
+  text-align: right;
+}
+
+/* 予定追加モーダル */
+.modal-backdrop {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: #17223577;
+}
+
+.modal-backdrop.open {
+  display: flex;
+}
+
+.modal {
+  width: min(540px, 100%);
+  max-height: 90vh;
+  overflow-y: auto;
+  padding: 24px;
+  background: white;
+  border-radius: 18px;
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.modal-header h2 {
+  margin: 0;
+  font-size: 22px;
+}
+
+.close-button {
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  font-size: 28px;
+}
+
+.form-group {
+  margin-bottom: 16px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 7px;
+  font-size: 14px;
+  font-weight: bold;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+  width: 100%;
+  min-width: 0;
+  padding: 11px;
+  border: 1px solid #dce2eb;
+  border-radius: 9px;
+  background: white;
+}
+
+.form-group textarea {
+  min-height: 80px;
+  resize: vertical;
+}
+
+.recurrence-weekdays {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.recurrence-weekdays label {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  padding: 8px 2px;
+  border-radius: 8px;
+  background: var(--background);
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.recurrence-weekdays input {
+  width: auto;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.type-heading {
+  font-size: 14px;
+  font-weight: bold;
+  margin-bottom: 10px;
+}
+
+.event-type-tabs {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.type-tab {
+  min-height: 44px;
+  border: 2px solid transparent;
+  border-radius: 9px;
+  padding: 8px 4px;
+  font-size: 13px;
+  font-weight: bold;
+}
+
+.type-tab.selected {
+  border-color: #4e6279;
+  box-shadow: 0 0 0 1px #4e6279;
+}
+
+.type-tab[data-type="school"] {
+  background: #d8f3ff;
+}
+
+.type-tab[data-type="work"] {
+  background: #ffead7;
+}
+
+.type-tab[data-type="task"] {
+  background: #eee3ff;
+}
+
+.type-tab[data-type="other"] {
+  background: #e2f2e8;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 22px;
+}
+
+/* メニュー */
+.drawer-backdrop {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 150;
+  background: #17223566;
+}
+
+.drawer-backdrop.open {
+  display: block;
+}
+
+.drawer {
+  width: min(320px, 85vw);
+  height: 100%;
+  padding: 24px 18px;
+  background: white;
+}
+
+.drawer-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  font-size: 21px;
+  font-weight: bold;
+}
+
+.drawer-link {
+  display: block;
+  width: 100%;
+  margin-bottom: 8px;
+  padding: 15px;
+  border: none;
+  border-radius: 10px;
+  background: #f5f7fb;
+  color: var(--text);
+  text-align: left;
+  text-decoration: none;
+  font-weight: bold;
+}
+
+.theme-section {
+  margin-top: 24px;
+  padding-top: 18px;
+  border-top: 1px solid var(--border);
+}
+
+.theme-title {
+  margin-bottom: 12px;
+  font-size: 14px;
+  font-weight: bold;
+}
+
+.theme-options {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 5px;
+}
+
+.theme-option {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 2px;
+  border: 2px solid transparent;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--text);
+  font-size: 10px;
+}
+
+.theme-option.selected {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.theme-swatch {
+  width: 28px;
+  height: 28px;
+  border: 1px solid #00000018;
+  border-radius: 50%;
+}
+
+.subpage {
+  display: none;
+  margin-top: 20px;
+}
+
+.subpage.active {
+  display: block;
+}
+
+.back-button {
+  margin-bottom: 18px;
+  padding: 9px 13px;
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  background: white;
+}
+
+.summary-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin: 18px 0;
+}
+
+.summary-card {
+  padding: 16px;
+  background: #f5f9fd;
+  border-radius: 12px;
+}
+
+.summary-label {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.summary-value {
+  margin-top: 8px;
+  font-size: 20px;
+  font-weight: bold;
+  overflow-wrap: anywhere;
+}
+
+.assignment-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.assignment-info {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.assignment-name {
+  font-weight: bold;
+}
+
+.assignment-due {
+  margin-top: 5px;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.status-label {
+  display: inline-block;
+  margin-top: 6px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  background: #fff0d9;
+  color: #99601b;
+  font-size: 11px;
+}
+
+.status-label.submitted {
+  background: #ddf7e9;
+  color: #247c4b;
+}
+
+.note {
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.7;
+}
+
+.holiday-wage-label {
+  color: var(--holiday);
+}
+
+@media (max-width: 850px) {
+  .app {
+    padding: 12px;
+  }
+
+  .calendar-card,
+  .selected-date-card {
+    padding: 12px;
+  }
+
+  .calendar-header {
+    grid-template-columns: 1fr auto 1fr;
+    gap: 5px;
+  }
+
+  .month-title {
+    font-size: 20px;
+  }
+
+  .month-navigation button {
+    width: 34px;
+    height: 36px;
+  }
+
+  .legend {
+    grid-column: 1 / -1;
+  }
+
+  .day {
+    min-height: 90px;
+    padding: 4px;
+  }
+
+  .event-chip {
+    font-size: 10px;
+    padding: 3px;
+  }
+
+  .holiday-name {
+    font-size: 9px;
+  }
+}
+
+@media (max-width: 520px) {
+  .app {
+    padding: 8px;
+  }
+
+  .topbar {
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+
+  .menu-button {
+    width: 40px;
+    height: 40px;
+    flex: 0 0 40px;
+    font-size: 22px;
+  }
+
+  .topbar-title {
+    font-size: 16px;
+  }
+
+  .add-button {
+    flex: 0 0 auto;
+    padding: 9px 8px;
+    font-size: 11px;
+    white-space: nowrap;
+  }
+
+  .calendar-card,
+  .selected-date-card,
+  .subpage {
+    padding: 10px;
+    border-radius: 14px;
+  }
+
+  .calendar-header {
+    gap: 4px;
+    margin-bottom: 12px;
+  }
+
+  .month-title {
+    font-size: 17px;
+  }
+
+  .month-navigation button {
+    width: 30px;
+    height: 34px;
+    font-size: 18px;
+  }
+
+  .weekday {
+    min-height: 34px;
+    font-size: 12px;
+  }
+
+  .legend {
+    gap: 6px;
+    margin-top: 12px;
+  }
+
+  .legend-item {
+    gap: 4px;
+    font-size: 11px;
+  }
+
+  .day {
+    min-height: 78px;
+    padding: 3px;
+  }
+
+  .day-number {
+    width: 21px;
+    height: 21px;
+    margin-bottom: 3px;
+    font-size: 12px;
+  }
+
+  .event-chip {
+    font-size: 9px;
+    padding: 2px;
+  }
+
+  .form-row {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+
+  .selected-event {
+    align-items: flex-start;
+  }
+
+  .selected-date-header {
+    align-items: stretch;
+  }
+
+  .selected-date-header .primary-button {
+    width: 100%;
+  }
+
+  .event-actions {
+    gap: 4px;
+  }
+
+  .modal-backdrop {
+    padding: 8px;
+  }
+
+  .modal {
+    max-height: calc(100vh - 16px);
+    max-height: calc(100dvh - 16px);
+    padding: 16px;
+    border-radius: 14px;
+  }
+
+  .modal-header {
+    margin-bottom: 14px;
+  }
+
+  .recurrence-weekdays {
+    gap: 3px;
+  }
+
+  .recurrence-weekdays label {
+    padding: 7px 1px;
+    font-size: 11px;
+  }
+
+  .modal-actions > button {
+    flex: 1 1 auto;
+  }
+
+  .summary-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .summary-value {
+    font-size: 18px;
+  }
+
+  .holiday-name {
+    font-size: 8px;
+  }
+
+  .notification-box {
+    padding: 13px;
+  }
+}
+
+@media (max-width: 380px) {
+  .topbar-title {
+    font-size: 14px;
+  }
+
+  .add-button {
+    padding: 8px 6px;
+    font-size: 10px;
+  }
+
+  .calendar-card {
+    padding: 7px;
+  }
+
+  .month-title {
+    font-size: 15px;
+  }
+
+  .day {
+    min-height: 65px;
+    padding: 2px;
+  }
+
+  .event-chip {
+    height: 5px;
+    margin: 2px 0;
+    padding: 0;
+    border: 0;
+    border-radius: 4px;
+    font-size: 0;
+  }
+
+  .holiday-name {
+    display: none;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<div class="notification-area" id="notificationArea"></div>
+
+<div class="app">
+
+<header class="topbar">
+  <button class="menu-button" id="menuButton" aria-label="メニュー">☰</button>
+  <div class="topbar-title">スケジュール帳</div>
+  <button class="add-button" id="addEventButton">＋ 予定を追加</button>
+</header>
+
+<main>
+<section id="calendarPage">
+  <div class="calendar-card">
+    <div class="calendar-header">
+      <div class="month-navigation">
+        <button id="prevMonth" aria-label="前の月">＜</button>
+      </div>
+
+      <h1 class="month-title" id="monthTitle"></h1>
+
+      <div class="month-navigation" style="justify-content:flex-end">
+        <button id="nextMonth" aria-label="次の月">＞</button>
+      </div>
+
+      <div class="legend">
+        <span class="legend-item">
+          <span class="legend-dot" style="background:#8dd8f5"></span>
+          学校
+        </span>
+        <span class="legend-item">
+          <span class="legend-dot" style="background:#ffb36b"></span>
+          アルバイト
+        </span>
+        <span class="legend-item">
+          <span class="legend-dot" style="background:#c4a3f7"></span>
+          課題
+        </span>
+        <span class="legend-item">
+          <span class="legend-dot" style="background:#72b889"></span>
+          その他
+        </span>
+      </div>
+    </div>
+
+    <div class="calendar-grid" id="calendarGrid"></div>
+  </div>
+
+  <section class="selected-date-card">
+    <div class="selected-date-header">
+      <h2 id="selectedDateTitle"></h2>
+      <button class="primary-button" id="addSelectedDateButton">
+        ＋ この日に予定を追加
+      </button>
+    </div>
+    <div id="selectedEvents"></div>
+  </section>
+</section>
+
+<section class="subpage" id="wagePage">
+  <button class="back-button" data-back>← カレンダーに戻る</button>
+  <h2>給料計算</h2>
+  <p>カレンダーに登録したアルバイト予定から給料を計算します。</p>
+
+  <div class="form-row">
+    <div class="form-group">
+      <label for="weekdayWage">平日時給（円）</label>
+      <input id="weekdayWage" type="number" min="0" step="1" placeholder="例：1100">
+    </div>
+
+    <div class="form-group">
+      <label for="holidayWage" class="holiday-wage-label">休日時給（円）</label>
+      <input id="holidayWage" type="number" min="0" step="1" placeholder="例：1200">
+    </div>
+  </div>
+
+  <p class="note">
+    ※日本の祝日に登録されたアルバイト予定には休日時給、
+    それ以外の日には平日時給を自動で適用します。
+  </p>
+
+  <div class="form-group">
+    <label for="wageMonth">集計する月</label>
+    <input id="wageMonth" type="month">
+  </div>
+
+  <button class="primary-button" id="refreshWage">給料を集計する</button>
+
+  <div class="summary-grid">
+    <div class="summary-card">
+      <div class="summary-label">勤務回数</div>
+      <div class="summary-value" id="wageCount">0回</div>
+    </div>
+
+    <div class="summary-card">
+      <div class="summary-label">合計勤務時間</div>
+      <div class="summary-value" id="wageHours">0時間</div>
+    </div>
+
+    <div class="summary-card">
+      <div class="summary-label">予想給料</div>
+      <div class="summary-value" id="wageTotal">0円</div>
+    </div>
+  </div>
+
+  <h3>勤務予定の内訳</h3>
+  <div id="wageDetails"></div>
+
+  <p class="note">
+    ※開始時刻と終了時刻が設定されたアルバイト予定が計算対象です。<br>
+    ※メモに「休憩30分」のように入力すると、その時間を差し引きます。<br>
+    ※給料は概算です。深夜割増・交通費・税金などは含みません。
+  </p>
+</section>
+
+<section class="subpage" id="assignmentPage">
+  <button class="back-button" data-back>← カレンダーに戻る</button>
+  <h2>課題一覧</h2>
+  <p>カレンダーに登録した課題を自動で表示します。</p>
+  <div id="assignmentList"></div>
+  <p class="note">
+    課題名はカレンダーの課題予定のメモから読み取ります。
+    提出状況はこの一覧から変更できます。
+  </p>
+</section>
+</main>
+</div>
+
+<div class="modal-backdrop" id="eventModal">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <div class="modal-header">
+      <h2 id="modalTitle">予定を追加</h2>
+      <button class="close-button" id="closeModal" aria-label="閉じる">×</button>
+    </div>
+
+    <form id="eventForm">
+      <div class="form-group">
+        <div class="type-heading">予定の種類</div>
+        <div class="event-type-tabs" id="eventTypeTabs">
+          <button type="button" class="type-tab selected" data-type="school">学校</button>
+          <button type="button" class="type-tab" data-type="work">アルバイト</button>
+          <button type="button" class="type-tab" data-type="task">課題</button>
+          <button type="button" class="type-tab" data-type="other">その他</button>
+        </div>
+      </div>
+
+      <div class="form-group" id="eventTitleGroup" hidden>
+        <label for="eventTitle">予定名</label>
+        <input id="eventTitle" type="text" maxlength="60" placeholder="例：病院、買い物、友達と食事">
+      </div>
+
+      <div class="form-group">
+        <label for="eventDate">日付</label>
+        <input id="eventDate" type="date" required>
+      </div>
+
+      <div class="form-group" id="recurrenceGroup">
+        <label for="recurrenceType">繰り返し設定</label>
+        <select id="recurrenceType">
+          <option value="none">繰り返さない</option>
+          <option value="weekly">毎週</option>
+          <option value="monthly">毎月（開始日と同じ日）</option>
+        </select>
+      </div>
+
+      <div class="form-group" id="recurrenceWeekdaysGroup" hidden>
+        <div class="type-heading">繰り返す曜日（複数選択可）</div>
+        <div class="recurrence-weekdays" id="recurrenceWeekdays">
+          <label><input type="checkbox" value="0"> 日</label>
+          <label><input type="checkbox" value="1"> 月</label>
+          <label><input type="checkbox" value="2"> 火</label>
+          <label><input type="checkbox" value="3"> 水</label>
+          <label><input type="checkbox" value="4"> 木</label>
+          <label><input type="checkbox" value="5"> 金</label>
+          <label><input type="checkbox" value="6"> 土</label>
+        </div>
+        <div class="note">曜日を選ばない場合は、開始日の曜日に毎週繰り返します。</div>
+      </div>
+
+      <div class="form-group" id="recurrenceEndGroup" hidden>
+        <label for="recurrenceEnd">繰り返し終了日</label>
+        <input id="recurrenceEnd" type="date">
+      </div>
+
+      <div class="form-group" id="editScopeGroup" hidden>
+        <label for="editScope">変更する範囲</label>
+        <select id="editScope">
+          <option value="one">この予定だけ</option>
+          <option value="future">この予定とこれ以降</option>
+          <option value="all">すべての予定</option>
+        </select>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="eventStart">開始時刻（任意）</label>
+          <input id="eventStart" type="time">
+        </div>
+        <div class="form-group">
+          <label for="eventEnd">終了時刻（任意）</label>
+          <input id="eventEnd" type="time">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="eventMemo" id="eventMemoLabel">メモ</label>
+        <textarea id="eventMemo" placeholder="場所や持ち物など"></textarea>
+      </div>
+
+      <div class="modal-actions">
+        <button type="button" class="secondary-button" id="cancelModal">キャンセル</button>
+        <button type="submit" class="primary-button">保存する</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="modal-backdrop" id="deleteScopeModal">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="deleteScopeTitle">
+    <div class="modal-header"><h2 id="deleteScopeTitle">削除する範囲</h2></div>
+    <p>繰り返し予定のどの範囲を削除しますか？</p>
+    <div class="modal-actions">
+      <button type="button" class="secondary-button" id="cancelDeleteScope">キャンセル</button>
+      <button type="button" class="danger-button" data-delete-scope="one">この予定だけ</button>
+      <button type="button" class="danger-button" data-delete-scope="future">これ以降</button>
+      <button type="button" class="danger-button" data-delete-scope="all">すべて</button>
+    </div>
+  </div>
+</div>
+
+<div class="drawer-backdrop" id="drawerBackdrop">
+  <aside class="drawer">
+    <div class="drawer-header">
+      メニュー
+      <button class="close-button" id="closeDrawer" aria-label="閉じる">×</button>
+    </div>
+    <button class="drawer-link" data-page="calendarPage">📅 カレンダー</button>
+    <button class="drawer-link" data-page="wagePage">💰 給料計算</button>
+    <button class="drawer-link" data-page="assignmentPage">📝 課題一覧</button>
+    <a class="drawer-link" href="https://cit.manaba.jp/ct/home" target="_blank" rel="noopener noreferrer">
+      🎓 manabaを開く ↗
+    </a>
+    <section class="theme-section" aria-labelledby="themeTitle">
+      <div class="theme-title" id="themeTitle">🎨 カラー変更</div>
+      <div class="theme-options" id="themeOptions">
+        <button class="theme-option" type="button" data-theme="rose" aria-label="ローズ"><span class="theme-swatch" style="background:#f6dce5"></span>ローズ</button>
+        <button class="theme-option" type="button" data-theme="mint" aria-label="ミント"><span class="theme-swatch" style="background:#d8eee5"></span>ミント</button>
+        <button class="theme-option" type="button" data-theme="sky" aria-label="スカイ"><span class="theme-swatch" style="background:#dcecf7"></span>スカイ</button>
+        <button class="theme-option" type="button" data-theme="lavender" aria-label="ラベンダー"><span class="theme-swatch" style="background:#e8def4"></span>ラベ
+        </button>
+        <button class="theme-option" type="button" data-theme="peach" aria-label="ピーチ"><span class="theme-swatch" style="background:#f7e5d2"></span>ピーチ</button>
+      </div>
+    </section>
+  </aside>
+</div>
+
+<script>
+"use strict";
+
+const EVENT_KEY = "scheduleEvents_v4";
+const WAGE_KEY = "scheduleHourlyWage_v1";
+const HOLIDAY_WAGE_KEY = "scheduleHolidayHourlyWage_v1";
+const NOTIFICATION_KEY = "scheduleNotifications_v1";
+
+const NOTIFICATION_DAYS = [14, 7, 3, 2, 1];
+const NOTIFICATION_HOUR = 13;
+const NOTIFICATION_MINUTE = 9;
+const THEME_KEY = "scheduleTheme_v1";
+const themes = {
+  rose: { background: "#fff5f7", accent: "#e986a2", soft: "#fde7ed", border: "#e9a4b6" },
+  mint: { background: "#f2faf6", accent: "#65b99b", soft: "#e1f3eb", border: "#8bcbb4" },
+  sky: { background: "#f2f8fc", accent: "#69aaca", soft: "#e3f1f8", border: "#8bbbd2" },
+  lavender: { background: "#f8f5fc", accent: "#9b82c2", soft: "#eee7f7", border: "#b5a1d2" },
+  peach: { background: "#fff8f1", accent: "#d99b68", soft: "#f9eadb", border: "#e5b589" }
+};
+
+function applyTheme(themeName) {
+  const selectedTheme = themes[themeName] ? themeName : "rose";
+  const theme = themes[selectedTheme];
+  const root = document.documentElement;
+  root.style.setProperty("--background", theme.background);
+  root.style.setProperty("--accent", theme.accent);
+  root.style.setProperty("--accent-soft", theme.soft);
+  root.style.setProperty("--accent-border", theme.border);
+  localStorage.setItem(THEME_KEY, selectedTheme);
+  document.querySelectorAll(".theme-option").forEach(button => {
+    const active = button.dataset.theme === selectedTheme;
+    button.classList.toggle("selected", active);
+    button.setAttribute("aria-pressed", String(active));
+  });
+}
+
+document.getElementById("themeOptions").addEventListener("click", event => {
+  const button = event.target.closest("[data-theme]");
+  if (button) applyTheme(button.dataset.theme);
+});
+applyTheme(localStorage.getItem(THEME_KEY) || "rose");
+
+const typeNames = {
+  school: "学校",
+  work: "アルバイト",
+  task: "課題",
+  other: "その他"
+};
+
+const fixedTypes = ["school", "work", "task", "other"];
+
+const colors = {
+  school: "#8dd8f5",
+  work: "#ffb36b",
+  task: "#c4a3f7",
+  other: "#72b889"
+};
+
+/* =====================================
+   日本の祝日計算
+===================================== */
+
+function dateKey(year, month, day) {
+  return `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+}
+
+function nthMonday(year, month, nth) {
+  const firstDay = new Date(year, month - 1, 1).getDay();
+  const firstMonday = 1 + ((8 - firstDay) % 7);
+  return firstMonday + (nth - 1) * 7;
+}
+
+function vernalEquinoxDay(year) {
+  if (year < 1980 || year > 2099) return null;
+
+  return Math.floor(
+    20.8431 +
+    0.242194 * (year - 1980) -
+    Math.floor((year - 1980) / 4)
+  );
+}
+
+function autumnalEquinoxDay(year) {
+  if (year < 1980 || year > 2099) return null;
+
+  return Math.floor(
+    23.2488 +
+    0.242194 * (year - 1980) -
+    Math.floor((year - 1980) / 4)
+  );
+}
+
+function getJapaneseHolidays(year) {
+  const holidays = new Map();
+
+  function add(month, day, name) {
+    if (day === null || day < 1) return;
+
+    const date = new Date(year, month - 1, day);
+
+    if (date.getMonth() !== month - 1) return;
+
+    holidays.set(dateKey(year, month, day), name);
+  }
+
+  add(1, 1, "元日");
+
+  if (year >= 2000) {
+    add(1, nthMonday(year, 1, 2), "成人の日");
+  } else {
+    add(1, 15, "成人の日");
+  }
+
+  if (year >= 1967) add(2, 11, "建国記念の日");
+
+  if (year >= 2020) {
+    add(2, 23, "天皇誕生日");
+  } else if (year >= 1989 && year <= 2018) {
+    add(12, 23, "天皇誕生日");
+  }
+
+  add(3, vernalEquinoxDay(year), "春分の日");
+
+  if (year >= 2007) {
+    add(4, 29, "昭和の日");
+  } else if (year >= 1989) {
+    add(4, 29, "みどりの日");
+  } else {
+    add(4, 29, "天皇誕生日");
+  }
+
+  add(5, 3, "憲法記念日");
+
+  if (year >= 2007) add(5, 4, "みどりの日");
+
+  add(5, 5, "こどもの日");
+
+  if (year === 2020) {
+    add(7, 23, "海の日");
+  } else if (year === 2021) {
+    add(7, 22, "海の日");
+  } else if (year >= 2003) {
+    add(7, nthMonday(year, 7, 3), "海の日");
+  } else if (year >= 1996) {
+    add(7, 20, "海の日");
+  }
+
+  if (year === 2020) {
+    add(8, 10, "山の日");
+  } else if (year === 2021) {
+    add(8, 8, "山の日");
+  } else if (year >= 2016) {
+    add(8, 11, "山の日");
+  }
+
+  if (year >= 2003) {
+    add(9, nthMonday(year, 9, 3), "敬老の日");
+  } else if (year >= 1966) {
+    add(9, 15, "敬老の日");
+  }
+
+  add(9, autumnalEquinoxDay(year), "秋分の日");
+
+  if (year === 2020) {
+    add(7, 24, "スポーツの日");
+  } else if (year === 2021) {
+    add(7, 23, "スポーツの日");
+  } else if (year >= 2000) {
+    add(10, nthMonday(year, 10, 2), "スポーツの日");
+  } else if (year >= 1966) {
+    add(10, 10, "体育の日");
+  }
+
+  add(11, 3, "文化の日");
+  add(11, 23, "勤労感謝の日");
+
+  const daysInYear =
+    (new Date(year + 1, 0, 1) - new Date(year, 0, 1)) /
+    86400000;
+
+  for (let index = 1; index < daysInYear - 1; index++) {
+    const date = new Date(year, 0, 1 + index);
+
+    const key = dateKey(
+      date.getFullYear(),
+      date.getMonth() + 1,
+      date.getDate()
+    );
+
+    if (holidays.has(key)) continue;
+
+    const previous = new Date(date);
+    previous.setDate(previous.getDate() - 1);
+
+    const next = new Date(date);
+    next.setDate(next.getDate() + 1);
+
+    const previousKey = dateKey(
+      previous.getFullYear(),
+      previous.getMonth() + 1,
+      previous.getDate()
+    );
+
+    const nextKey = dateKey(
+      next.getFullYear(),
+      next.getMonth() + 1,
+      next.getDate()
+    );
+
+    if (holidays.has(previousKey) && holidays.has(nextKey)) {
+      holidays.set(key, "国民の休日");
+    }
+  }
+
+  const originalHolidays = [...holidays.entries()];
+
+  originalHolidays.forEach(([key]) => {
+    const [y, m, d] = key.split("-").map(Number);
+    const date = new Date(y, m - 1, d);
+
+    if (date.getDay() !== 0) return;
+
+    const substitute = new Date(date);
+    substitute.setDate(substitute.getDate() + 1);
+
+    let attempts = 0;
+
+    while (attempts < 370) {
+      const substituteKey = dateKey(
+        substitute.getFullYear(),
+        substitute.getMonth() + 1,
+        substitute.getDate()
+      );
+
+      if (!holidays.has(substituteKey)) {
+        if (substitute.getFullYear() === year) {
+          holidays.set(substituteKey, "振替休日");
+        }
+        break;
+      }
+
+      substitute.setDate(substitute.getDate() + 1);
+      attempts++;
+    }
+  });
+
+  return holidays;
+}
+
+const holidayCache = new Map();
+
+function getHolidayName(dateString) {
+  if (!dateString) return "";
+
+  const year = Number(dateString.slice(0, 4));
+
+  if (!holidayCache.has(year)) {
+    holidayCache.set(year, getJapaneseHolidays(year));
+  }
+
+  return holidayCache.get(year).get(dateString) || "";
+}
+
+/* =====================================
+   データ保存
+===================================== */
+
+function loadArray(key) {
+  try {
+    const value = JSON.parse(localStorage.getItem(key) || "[]");
+    return Array.isArray(value) ? value : [];
+  } catch {
+    return [];
+  }
+}
+
+let events = loadArray(EVENT_KEY);
+
+function saveEvents() {
+  localStorage.setItem(EVENT_KEY, JSON.stringify(events));
+}
+
+function makeId() {
+  return Date.now().toString(36) +
+    Math.random().toString(36).slice(2);
+}
+
+function localDateString(date) {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, "0");
+  const d = String(date.getDate()).padStart(2, "0");
+
+  return `${y}-${m}-${d}`;
+}
+
+function formatDate(dateString) {
+  if (!dateString) return "";
+
+  const [y, m, d] = dateString.split("-").map(Number);
+  const date = new Date(y, m - 1, d);
+  const weekdays = ["日", "月", "火", "水", "木", "金", "土"];
+
+  return `${y}年${m}月${d}日（${weekdays[date.getDay()]}）`;
+}
+
+function escapeHTML(value) {
+  return String(value ?? "").replace(/[&<>"']/g, char => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#39;"
+  })[char]);
+}
+
+const today = new Date();
+
+let displayedYear = today.getFullYear();
+let displayedMonth = today.getMonth();
+let selectedDate = localDateString(today);
+let editingEventId = null;
+let selectedType = "school";
+
+function getEventColor(type) {
+  return colors[type] || "#9ba3b1";
+}
+
+/* =====================================
+   通知機能
+===================================== */
+
+function loadNotificationRecords() {
+  try {
+    const records = JSON.parse(
+      localStorage.getItem(NOTIFICATION_KEY) || "[]"
+    );
+
+    return Array.isArray(records) ? records : [];
+  } catch {
+    return [];
+  }
+}
+
+let notificationRecords = loadNotificationRecords();
+
+function saveNotificationRecords() {
+  localStorage.setItem(
+    NOTIFICATION_KEY,
+    JSON.stringify(notificationRecords)
+  );
+}
+
+function addDays(dateString, days) {
+  const [year, month, day] = dateString.split("-").map(Number);
+
+  const date = new Date(year, month - 1, day);
+  date.setDate(date.getDate() + days);
+
+  return localDateString(date);
+}
+
+function getNotificationEventName(item) {
+  if (item.type === "task") {
+    return item.memo || "課題";
+  }
+
+  return item.title || typeNames[item.type] || "予定";
+}
+
+function makeNotificationId(item, daysBefore) {
+  return `${item.id}_${daysBefore}_${item.date}`;
+}
+
+/*
+  通知を作成する。
+
+  予定日の14日前・7日前・3日前・1日前の
+  それぞれ12:00を過ぎていれば通知を作成する。
+
+  通知予定日の当日、指定時刻を過ぎた場合に通知を作成する。
+*/
+function checkNotifications() {
+  const now = new Date();
+  const todayString = localDateString(now);
+
+  const currentMinutes =
+    now.getHours() * 60 + now.getMinutes();
+
+  if (currentMinutes < NOTIFICATION_HOUR * 60 + NOTIFICATION_MINUTE) {
+    renderNotifications();
+    return;
+  }
+
+  events.forEach(item => {
+    if (!item.date || !item.id) return;
+
+    NOTIFICATION_DAYS.forEach(daysBefore => {
+      const notificationDate = addDays(
+        item.date,
+        -daysBefore
+      );
+
+      // 14日前・7日前・3日前・2日前・1日前の当日だけ通知する。
+      if (notificationDate !== todayString) return;
+
+      const notificationId = makeNotificationId(
+        item,
+        daysBefore
+      );
+
+      const alreadyNotified = notificationRecords.some(
+        record => record.id === notificationId
+      );
+
+      if (alreadyNotified) return;
+
+      notificationRecords.push({
+        id: notificationId,
+        eventId: item.id,
+        eventDate: item.date,
+        daysBefore: daysBefore,
+        createdAt: Date.now()
+      });
+    });
+  });
+
+  saveNotificationRecords();
+  renderNotifications();
+}
+
+/*
+  通知ボックスを表示する。
+
+  予定日を過ぎても自動削除しない。
+  予定が削除された場合だけ、その予定の通知を整理する。
+*/
+function renderNotifications() {
+  const container =
+    document.getElementById("notificationArea");
+
+  /*
+    予定自体が削除された場合や、
+    日付が変更された場合は古い通知を整理する。
+    予定日を過ぎたことだけを理由に削除することはない。
+  */
+  notificationRecords = notificationRecords.filter(record => {
+    const eventExists = events.some(item =>
+      item.id === record.eventId &&
+      item.date === record.eventDate
+    );
+
+    return eventExists;
+  });
+
+  saveNotificationRecords();
+
+  if (notificationRecords.length === 0) {
+    container.innerHTML = "";
+    return;
+  }
+
+  // 予定ごとに通知をまとめる
+  const groupedNotifications = new Map();
+
+  notificationRecords.forEach(record => {
+    const item = events.find(
+      event => event.id === record.eventId &&
+               event.date === record.eventDate
+    );
+
+    if (!item) return;
+
+    if (!groupedNotifications.has(item.id)) {
+      groupedNotifications.set(item.id, {
+        item: item,
+        days: []
+      });
+    }
+
+    groupedNotifications
+      .get(item.id)
+      .days.push(record.daysBefore);
+  });
+
+  const notifications = [...groupedNotifications.values()]
+    .sort((a, b) =>
+      a.item.date.localeCompare(b.item.date)
+    );
+
+  if (notifications.length === 0) {
+    container.innerHTML = "";
+    return;
+  }
+
+  container.innerHTML = `
+    <div
+      class="notification-box"
+      id="notificationBox"
+      role="button"
+      tabindex="0"
+      aria-label="通知を確認してカレンダーを開く"
+    >
+      <div class="notification-top">
+        <div class="notification-icon">🔔</div>
+
+        <div class="notification-heading">
+          スケジュールのお知らせ
+        </div>
+
+        <div class="notification-count">
+          ${notifications.length}件
+        </div>
+      </div>
+
+      <div class="notification-event-list">
+        ${notifications.map(notification => {
+          const item = notification.item;
+
+          const daysText = notification.days
+            .sort((a, b) => a - b)
+            .map(day => `${day}日前`)
+            .join("・");
+
+          return `
+            <div class="notification-event">
+              <span
+                class="notification-event-dot"
+                style="background:${getEventColor(item.type)}"
+              ></span>
+
+              <div class="notification-event-info">
+                <div class="notification-event-name">
+                  ${escapeHTML(getNotificationEventName(item))}
+                </div>
+
+                <div class="notification-event-date">
+                  ${escapeHTML(formatDate(item.date))}
+                  ／ ${escapeHTML(daysText)}のお知らせ
+                </div>
+              </div>
+            </div>
+          `;
+        }).join("")}
+      </div>
+
+      <div class="notification-footer">
+        タップして予定を確認する ↗
+      </div>
+    </div>
+  `;
+
+  const notificationBox =
+    document.getElementById("notificationBox");
+
+  /*
+    通知ボックスをタップすると、
+    すべての通知をまとめて削除してから
+    カレンダー画面を開く。
+  */
+  function openNotifications() {
+    if (notificationRecords.length === 0) return;
+
+    const firstNotification = notifications[0];
+    const targetDate = firstNotification.item.date;
+
+    // 通知をすべて削除
+    notificationRecords = [];
+    saveNotificationRecords();
+
+    // 通知ボックスを画面から消す
+    container.innerHTML = "";
+
+    // 通知された予定の日付を選択
+    selectedDate = targetDate;
+
+    const [year, month] =
+      targetDate.split("-").map(Number);
+
+    displayedYear = year;
+    displayedMonth = month - 1;
+
+    // カレンダー画面を表示
+    showPage("calendarPage");
+
+    // カレンダーを更新
+    renderCalendar();
+
+    // 該当日の予定が見える位置へ移動
+    document.getElementById("selectedDateTitle")
+      .scrollIntoView({
+        behavior: "smooth",
+        block: "center"
+      });
+  }
+
+  notificationBox.addEventListener(
+    "click",
+    openNotifications
+  );
+
+  notificationBox.addEventListener(
+    "keydown",
+    event => {
+      if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        openNotifications();
+      }
+    }
+  );
+}
+
+function updateNotifications() {
+  renderNotifications();
+  scheduleNextNotificationCheck();
+}
+
+// 各予定の通知日（14・7・3・2・1日前）の13:09に確認する。
+// ページを開いた時に過去分をまとめて通知することはしない。
+let notificationTimer = null;
+
+function scheduleNextNotificationCheck() {
+  if (notificationTimer !== null) {
+    clearTimeout(notificationTimer);
+    notificationTimer = null;
+  }
+
+  const now = new Date();
+  let nextCheckTime = Infinity;
+
+  events.forEach(item => {
+    if (!item.date || !item.id) return;
+
+    NOTIFICATION_DAYS.forEach(daysBefore => {
+      const notificationDate = addDays(item.date, -daysBefore);
+      const [year, month, day] = notificationDate.split("-").map(Number);
+      const notificationTime = new Date(
+        year,
+        month - 1,
+        day,
+        NOTIFICATION_HOUR,
+        NOTIFICATION_MINUTE
+      ).getTime();
+
+      if (notificationTime > now.getTime() && notificationTime < nextCheckTime) {
+        nextCheckTime = notificationTime;
+      }
+    });
+  });
+
+  if (!Number.isFinite(nextCheckTime)) return;
+
+  notificationTimer = setTimeout(() => {
+    notificationTimer = null;
+    checkNotifications();
+    scheduleNextNotificationCheck();
+  }, nextCheckTime - now.getTime());
+}
+
+/* =====================================
+   カレンダー表示
+===================================== */
+
+const calendarGrid = document.getElementById("calendarGrid");
+
+function renderCalendar() {
+  calendarGrid.innerHTML = "";
+
+  document.getElementById("monthTitle").textContent =
+    `${displayedYear}年${displayedMonth + 1}月`;
+
+  ["日", "月", "火", "水", "木", "金", "土"].forEach(day => {
+    const cell = document.createElement("div");
+
+    cell.className = "weekday";
+    cell.textContent = day;
+
+    calendarGrid.appendChild(cell);
+  });
+
+  const firstDay =
+    new Date(displayedYear, displayedMonth, 1).getDay();
+
+  const daysInMonth =
+    new Date(displayedYear, displayedMonth + 1, 0).getDate();
+
+  const totalCells =
+    Math.ceil((firstDay + daysInMonth) / 7) * 7;
+
+  for (let i = 0; i < totalCells; i++) {
+    const dayNumber = i - firstDay + 1;
+    const cell = document.createElement("div");
+
+    if (dayNumber < 1 || dayNumber > daysInMonth) {
+      cell.className = "day empty";
+      calendarGrid.appendChild(cell);
+      continue;
+    }
+
+    const dateString = localDateString(
+      new Date(displayedYear, displayedMonth, dayNumber)
+    );
+
+    const actualDate = new Date(
+      displayedYear,
+      displayedMonth,
+      dayNumber
+    );
+
+    const holidayName = getHolidayName(dateString);
+    const isSunday = actualDate.getDay() === 0;
+    const isSaturday = actualDate.getDay() === 6;
+    const isHoliday = Boolean(holidayName);
+
+    cell.className = "day";
+
+    if (dateString === localDateString(today)) {
+      cell.classList.add("today");
+    }
+
+    if (dateString === selectedDate) {
+      cell.classList.add("selected");
+    }
+
+    const number = document.createElement("div");
+
+    number.className = "day-number";
+    number.textContent = dayNumber;
+
+    if (isSunday || isHoliday) {
+      number.classList.add("red-date");
+    } else if (isSaturday) {
+      number.classList.add("blue-date");
+    }
+
+    cell.appendChild(number);
+
+    if (holidayName) {
+      const holidayLabel = document.createElement("div");
+
+      holidayLabel.className = "holiday-name";
+      holidayLabel.textContent = holidayName;
+
+      cell.appendChild(holidayLabel);
+      cell.title = holidayName;
+    }
+
+    const dayEvents = events
+      .filter(item => item.date === dateString)
+      .sort((a, b) =>
+        (a.start || "").localeCompare(b.start || "")
+      );
+
+    dayEvents.slice(0, 3).forEach(item => {
+      const chip = document.createElement("button");
+
+      chip.type = "button";
+
+      chip.className =
+        `event-chip ${fixedTypes.includes(item.type) ? item.type : "school"}`;
+
+      let eventTitle =
+        item.title || typeNames[item.type] || "予定";
+
+      if (item.type === "task" && item.memo) {
+        eventTitle = item.memo;
+      }
+
+      chip.textContent =
+        `${item.start ? item.start + " " : ""}${eventTitle}`;
+
+      chip.title = eventTitle;
+
+      chip.addEventListener("click", event => {
+        event.stopPropagation();
+        openEditEvent(item.id);
+      });
+
+      cell.appendChild(chip);
+    });
+
+    if (dayEvents.length > 3) {
+      const more = document.createElement("div");
+
+      more.className = "more-events";
+      more.textContent = `ほか ${dayEvents.length - 3}件`;
+
+      cell.appendChild(more);
+    }
+
+    cell.addEventListener("click", () => {
+      selectedDate = dateString;
+      renderCalendar();
+    });
+
+    calendarGrid.appendChild(cell);
+  }
+
+  renderSelectedEvents();
+}
+
+document.getElementById("prevMonth").addEventListener("click", () => {
+  displayedMonth--;
+
+  if (displayedMonth < 0) {
+    displayedMonth = 11;
+    displayedYear--;
+  }
+
+  renderCalendar();
+});
+
+document.getElementById("nextMonth").addEventListener("click", () => {
+  displayedMonth++;
+
+  if (displayedMonth > 11) {
+    displayedMonth = 0;
+    displayedYear++;
+  }
+
+  renderCalendar();
+});
+
+/* =====================================
+   選択日の予定一覧
+===================================== */
+
+function renderSelectedEvents() {
+  document.getElementById("selectedDateTitle").textContent =
+    `${formatDate(selectedDate)}の予定`;
+
+  const container =
+    document.getElementById("selectedEvents");
+
+  const dayEvents = events
+    .filter(item => item.date === selectedDate)
+    .sort((a, b) =>
+      (a.start || "").localeCompare(b.start || "")
+    );
+
+  if (dayEvents.length === 0) {
+    container.innerHTML =
+      '<div class="empty-message">この日の予定はありません。</div>';
+    return;
+  }
+
+  container.innerHTML = dayEvents.map(item => {
+    const time = item.start
+      ? `${escapeHTML(item.start)}${item.end ? "〜" + escapeHTML(item.end) : ""}`
+      : "時間指定なし";
+
+    const title = item.type === "task"
+      ? (item.memo || "課題")
+      : (item.title || typeNames[item.type] || "予定");
+
+    return `
+      <div class="selected-event">
+        <div class="selected-event-info">
+          <div class="selected-event-title">
+            <span class="legend-dot" style="background:${getEventColor(item.type)}"></span>
+            ${escapeHTML(title)}
+          </div>
+
+          <div class="selected-event-meta">${time}</div>
+
+          <div class="selected-event-meta">
+            ${escapeHTML(typeNames[item.type] || "予定")}
+          </div>
+
+          ${item.memo && item.type !== "task"
+            ? `<div class="selected-event-meta">${escapeHTML(item.memo)}</div>`
+            : ""}
+        </div>
+
+        <div class="event-actions">
+          <button class="small-button" data-edit="${escapeHTML(item.id)}">編集</button>
+          <button class="danger-button" data-delete="${escapeHTML(item.id)}">削除</button>
+        </div>
+      </div>`;
+  }).join("");
+
+  container.querySelectorAll("[data-edit]").forEach(button => {
+    button.addEventListener("click", () => {
+      openEditEvent(button.dataset.edit);
+    });
+  });
+
+  container.querySelectorAll("[data-delete]").forEach(button => {
+    button.addEventListener("click", () => {
+      deleteEvent(button.dataset.delete);
+    });
+  });
+}
+
+/* =====================================
+   予定の追加・編集
+===================================== */
+
+const eventModal = document.getElementById("eventModal");
+const eventForm = document.getElementById("eventForm");
+const eventDateInput = document.getElementById("eventDate");
+const eventStartInput = document.getElementById("eventStart");
+const eventEndInput = document.getElementById("eventEnd");
+const eventMemoInput = document.getElementById("eventMemo");
+const eventTitleInput = document.getElementById("eventTitle");
+const eventTitleGroup = document.getElementById("eventTitleGroup");
+const recurrenceTypeInput = document.getElementById("recurrenceType");
+const recurrenceEndInput = document.getElementById("recurrenceEnd");
+const recurrenceWeekdaysGroup = document.getElementById("recurrenceWeekdaysGroup");
+const recurrenceEndGroup = document.getElementById("recurrenceEndGroup");
+const editScopeGroup = document.getElementById("editScopeGroup");
+let pendingDeleteId = null;
+
+function updateRecurrenceFields() {
+  const recurring = recurrenceTypeInput.value !== "none";
+  recurrenceWeekdaysGroup.hidden = recurrenceTypeInput.value !== "weekly";
+  recurrenceEndGroup.hidden = !recurring;
+  recurrenceEndInput.required = recurring;
+}
+
+recurrenceTypeInput.addEventListener("change", updateRecurrenceFields);
+
+function recurrenceDates(startDate, endDate, type, weekdays) {
+  const dates = [];
+  const [startYear, startMonth, startDay] = startDate.split("-").map(Number);
+  const start = new Date(startYear, startMonth - 1, startDay);
+  const [endYear, endMonth, endDay] = endDate.split("-").map(Number);
+  const end = new Date(endYear, endMonth - 1, endDay);
+
+  if (type === "weekly") {
+    const selectedDays = weekdays.length
+      ? weekdays
+      : [start.getDay()];
+    for (const date = new Date(start); date <= end; date.setDate(date.getDate() + 1)) {
+      if (selectedDays.includes(date.getDay())) {
+        dates.push(localDateString(date));
+      }
+    }
+  } else if (type === "monthly") {
+    for (let offset = 0; ; offset++) {
+      const monthStart = new Date(startYear, startMonth - 1 + offset, 1);
+      const lastDay = new Date(
+        monthStart.getFullYear(), monthStart.getMonth() + 1, 0
+      ).getDate();
+      const date = new Date(
+        monthStart.getFullYear(), monthStart.getMonth(), Math.min(startDay, lastDay)
+      );
+      if (date > end) break;
+      dates.push(localDateString(date));
+    }
+  }
+
+  return dates;
+}
+
+function shiftDate(dateString, days) {
+  return addDays(dateString, days);
+}
+
+function selectType(type) {
+  selectedType = type;
+
+  document.querySelectorAll(".type-tab").forEach(button => {
+    const active = button.dataset.type === type;
+
+    button.classList.toggle("selected", active);
+    button.setAttribute("aria-pressed", String(active));
+  });
+
+  const memoLabel =
+    document.getElementById("eventMemoLabel");
+
+  eventTitleGroup.hidden = type !== "other";
+  eventTitleInput.required = type === "other";
+
+  if (type === "task") {
+    memoLabel.textContent = "課題名";
+    eventMemoInput.placeholder =
+      "例：メディアデザイン論のレポート";
+  } else if (type === "work") {
+    memoLabel.textContent = "メモ";
+    eventMemoInput.placeholder =
+      "例：休憩30分、店舗名など";
+  } else {
+    memoLabel.textContent = "メモ";
+    eventMemoInput.placeholder =
+      "場所や持ち物など";
+  }
+}
+
+document.querySelectorAll(".type-tab").forEach(button => {
+  button.addEventListener("click", () => {
+    selectType(button.dataset.type);
+  });
+});
+
+function openAddEvent(date = selectedDate) {
+  editingEventId = null;
+
+  eventForm.reset();
+
+  document.getElementById("modalTitle").textContent =
+    "予定を追加";
+
+  eventDateInput.value = date;
+  eventStartInput.value = "";
+  eventEndInput.value = "";
+  eventTitleInput.value = "";
+  recurrenceTypeInput.value = "none";
+  recurrenceEndInput.value = "";
+  document.querySelectorAll("#recurrenceWeekdays input").forEach(input => {
+    input.checked = false;
+  });
+  document.getElementById("recurrenceGroup").hidden = false;
+  editScopeGroup.hidden = true;
+  updateRecurrenceFields();
+
+  selectType("school");
+
+  eventModal.classList.add("open");
+}
+
+function openEditEvent(id) {
+  const item = events.find(event => event.id === id);
+
+  if (!item) return;
+
+  editingEventId = id;
+
+  document.getElementById("modalTitle").textContent =
+    "予定を編集";
+
+  eventDateInput.value = item.date;
+  eventStartInput.value = item.start || "";
+  eventEndInput.value = item.end || "";
+  eventMemoInput.value = item.memo || "";
+  eventTitleInput.value = item.title || "";
+  document.getElementById("recurrenceGroup").hidden = true;
+  recurrenceWeekdaysGroup.hidden = true;
+  recurrenceEndGroup.hidden = true;
+  recurrenceTypeInput.value = "none";
+  recurrenceEndInput.required = false;
+  editScopeGroup.hidden = !item.recurrenceId;
+  document.getElementById("editScope").value = "one";
+
+  selectType(
+    fixedTypes.includes(item.type) ? item.type : "other"
+  );
+
+  eventModal.classList.add("open");
+}
+
+function closeEventModal() {
+  eventModal.classList.remove("open");
+  editingEventId = null;
+}
+
+document.getElementById("addEventButton").addEventListener("click", () => {
+  openAddEvent();
+});
+
+document.getElementById("addSelectedDateButton").addEventListener("click", () => {
+  openAddEvent(selectedDate);
+});
+
+document.getElementById("closeModal").addEventListener("click", closeEventModal);
+document.getElementById("cancelModal").addEventListener("click", closeEventModal);
+
+eventModal.addEventListener("click", event => {
+  if (event.target === eventModal) {
+    closeEventModal();
+  }
+});
+
+eventForm.addEventListener("submit", event => {
+  event.preventDefault();
+
+  if (!eventDateInput.value) {
+    alert("日付を選択してください。");
+    return;
+  }
+
+  const recurrenceType = editingEventId ? "none" : recurrenceTypeInput.value;
+  const recurrenceEnd = recurrenceEndInput.value;
+  if (recurrenceType !== "none" && !recurrenceEnd) {
+    alert("繰り返し終了日を設定してください。");
+    recurrenceEndInput.focus();
+    return;
+  }
+  if (recurrenceType !== "none" && recurrenceEnd < eventDateInput.value) {
+    alert("繰り返し終了日は開始日以降にしてください。");
+    recurrenceEndInput.focus();
+    return;
+  }
+
+  if (
+    eventStartInput.value &&
+    eventEndInput.value &&
+    eventEndInput.value <= eventStartInput.value
+  ) {
+    alert("終了時刻は開始時刻より後にしてください。");
+    return;
+  }
+
+  if (
+    selectedType === "task" &&
+    !eventMemoInput.value.trim()
+  ) {
+    alert("課題名を入力してください。");
+    return;
+  }
+
+  if (selectedType === "other" && !eventTitleInput.value.trim()) {
+    alert("予定名を入力してください。");
+    eventTitleInput.focus();
+    return;
+  }
+
+  const oldEvent =
+    events.find(item => item.id === editingEventId);
+
+  const newEvent = {
+    id: editingEventId || makeId(),
+    date: eventDateInput.value,
+    title: selectedType === "other"
+      ? eventTitleInput.value.trim()
+      : typeNames[selectedType],
+    start: eventStartInput.value,
+    end: eventEndInput.value,
+    memo: eventMemoInput.value.trim(),
+    type: selectedType,
+    submitted: oldEvent?.submitted || false,
+    ...(oldEvent?.recurrenceId ? {
+      recurrenceId: oldEvent.recurrenceId,
+      recurrenceType: oldEvent.recurrenceType,
+      recurrenceWeekdays: oldEvent.recurrenceWeekdays,
+      recurrenceEnd: oldEvent.recurrenceEnd,
+      recurrenceStart: oldEvent.recurrenceStart
+    } : {})
+  };
+
+  let editedIds = [];
+  if (editingEventId) {
+    const scope = oldEvent?.recurrenceId
+      ? document.getElementById("editScope").value
+      : "one";
+    editedIds = events
+      .filter(item => item.id === editingEventId || (
+        oldEvent?.recurrenceId && item.recurrenceId === oldEvent.recurrenceId &&
+        (scope === "all" || scope === "future" && item.date >= oldEvent.date)
+      ))
+      .map(item => item.id);
+    if (!oldEvent?.recurrenceId || scope === "one") {
+      events = events.map(item => item.id === editingEventId ? newEvent : item);
+    } else {
+      const shift = Math.round(
+        (new Date(`${newEvent.date}T00:00:00`) - new Date(`${oldEvent.date}T00:00:00`)) / 86400000
+      );
+      events = events.map(item => {
+        const inScope = item.recurrenceId === oldEvent.recurrenceId &&
+          (scope === "all" || item.date >= oldEvent.date);
+        if (!inScope) return item;
+        return {
+          ...item,
+          date: shiftDate(item.date, shift),
+          title: newEvent.title,
+          start: newEvent.start,
+          end: newEvent.end,
+          memo: newEvent.memo,
+          type: newEvent.type
+        };
+      });
+    }
+  } else {
+    if (recurrenceType === "none") {
+      events.push(newEvent);
+    } else {
+      const weekdays = recurrenceType === "weekly"
+        ? [...document.querySelectorAll("#recurrenceWeekdays input:checked")]
+            .map(input => Number(input.value))
+        : [];
+      const dates = recurrenceDates(newEvent.date, recurrenceEnd, recurrenceType, weekdays);
+      if (dates.length === 0) {
+        alert("設定した期間内に繰り返し予定がありません。曜日と終了日を確認してください。");
+        return;
+      }
+      const recurrenceId = makeId();
+      dates.forEach(date => events.push({
+          ...newEvent,
+          id: makeId(),
+          date,
+          recurrenceId,
+          recurrenceType,
+          recurrenceWeekdays: weekdays,
+          recurrenceEnd,
+          recurrenceStart: newEvent.date
+        }));
+    }
+  }
+
+  selectedDate = newEvent.date;
+
+  const [year, month] =
+    selectedDate.split("-").map(Number);
+
+  displayedYear = year;
+  displayedMonth = month - 1;
+
+  saveEvents();
+  if (editedIds.length) {
+    const editedIdSet = new Set(editedIds);
+    notificationRecords = notificationRecords.filter(
+      record => !editedIdSet.has(record.eventId)
+    );
+    saveNotificationRecords();
+  }
+  closeEventModal();
+  renderAllLinkedPages();
+});
+
+/* =====================================
+   予定の削除
+===================================== */
+
+function deleteEvent(id) {
+  const target = events.find(item => item.id === id);
+
+  if (!target) return;
+
+  if (target.recurrenceId) {
+    pendingDeleteId = id;
+    document.getElementById("deleteScopeModal").classList.add("open");
+    return;
+  }
+
+  if (!confirm("この予定を削除しますか？")) return;
+  removeEvents([id]);
+}
+
+function removeEvents(ids) {
+  const idSet = new Set(ids);
+
+  events = events.filter(item => !idSet.has(item.id));
+
+  saveEvents();
+
+  notificationRecords = notificationRecords.filter(
+    record => !idSet.has(record.eventId)
+  );
+
+  saveNotificationRecords();
+
+  renderAllLinkedPages();
+}
+
+const deleteScopeModal = document.getElementById("deleteScopeModal");
+document.getElementById("cancelDeleteScope").addEventListener("click", () => {
+  deleteScopeModal.classList.remove("open");
+  pendingDeleteId = null;
+});
+
+deleteScopeModal.querySelectorAll("[data-delete-scope]").forEach(button => {
+  button.addEventListener("click", () => {
+    const target = events.find(item => item.id === pendingDeleteId);
+    if (!target) return;
+    const scope = button.dataset.deleteScope;
+    const ids = events
+      .filter(item => item.recurrenceId === target.recurrenceId &&
+        (scope === "all" || scope === "one" && item.id === target.id ||
+          scope === "future" && item.date >= target.date))
+      .map(item => item.id);
+    deleteScopeModal.classList.remove("open");
+    pendingDeleteId = null;
+    removeEvents(ids);
+  });
+});
+
+/* =====================================
+   メニュー
+===================================== */
+
+const drawerBackdrop =
+  document.getElementById("drawerBackdrop");
+
+document.getElementById("menuButton").addEventListener("click", () => {
+  drawerBackdrop.classList.add("open");
+});
+
+document.getElementById("closeDrawer").addEventListener("click", () => {
+  drawerBackdrop.classList.remove("open");
+});
+
+drawerBackdrop.addEventListener("click", event => {
+  if (event.target === drawerBackdrop) {
+    drawerBackdrop.classList.remove("open");
+  }
+});
+
+function showPage(pageId) {
+  document.getElementById("calendarPage").style.display =
+    pageId === "calendarPage" ? "block" : "none";
+
+  document.querySelectorAll(".subpage").forEach(page => {
+    page.classList.toggle("active", page.id === pageId);
+  });
+
+  document.getElementById("addEventButton").style.display =
+    pageId === "calendarPage" ? "" : "none";
+
+  drawerBackdrop.classList.remove("open");
+
+  if (pageId === "wagePage") {
+    renderWageSummary();
+  }
+
+  if (pageId === "assignmentPage") {
+    renderAssignments();
+  }
+}
+
+document.querySelectorAll("[data-page]").forEach(button => {
+  button.addEventListener("click", () => {
+    showPage(button.dataset.page);
+  });
+});
+
+document.querySelectorAll("[data-back]").forEach(button => {
+  button.addEventListener("click", () => {
+    showPage("calendarPage");
+  });
+});
+
+/* =====================================
+   給料計算
+===================================== */
+
+const weekdayWageInput =
+  document.getElementById("weekdayWage");
+
+const holidayWageInput =
+  document.getElementById("holidayWage");
+
+const wageMonthInput =
+  document.getElementById("wageMonth");
+
+weekdayWageInput.value =
+  localStorage.getItem(WAGE_KEY) || "";
+
+holidayWageInput.value =
+  localStorage.getItem(HOLIDAY_WAGE_KEY) || "";
+
+wageMonthInput.value =
+  `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}`;
+
+function saveWageSettings() {
+  localStorage.setItem(
+    WAGE_KEY,
+    weekdayWageInput.value
+  );
+
+  localStorage.setItem(
+    HOLIDAY_WAGE_KEY,
+    holidayWageInput.value
+  );
+
+  renderWageSummary();
+}
+
+weekdayWageInput.addEventListener(
+  "change",
+  saveWageSettings
+);
+
+holidayWageInput.addEventListener(
+  "change",
+  saveWageSettings
+);
+
+wageMonthInput.addEventListener(
+  "change",
+  renderWageSummary
+);
+
+document.getElementById("refreshWage").addEventListener(
+  "click",
+  saveWageSettings
+);
+
+function timeToMinutes(value) {
+  if (!value) return NaN;
+
+  const [hours, minutes] = value.split(":").map(Number);
+
+  if (
+    !Number.isInteger(hours) ||
+    !Number.isInteger(minutes) ||
+    hours < 0 ||
+    hours > 23 ||
+    minutes < 0 ||
+    minutes > 59
+  ) {
+    return NaN;
+  }
+
+  return hours * 60 + minutes;
+}
+
+function getBreakMinutes(memo) {
+  const match = String(memo || "")
+    .match(/休憩\s*[:：]?\s*(\d+)\s*分/);
+
+  return match ? Number(match[1]) : 0;
+}
+
+function calculateEventWage(item, wage) {
+  if (!item.start || !item.end) return null;
+
+  const start = timeToMinutes(item.start);
+  const end = timeToMinutes(item.end);
+
+  if (
+    !Number.isFinite(start) ||
+    !Number.isFinite(end) ||
+    end <= start
+  ) {
+    return null;
+  }
+
+  const breakMinutes = getBreakMinutes(item.memo);
+
+  const minutes = Math.max(
+    0,
+    end - start - breakMinutes
+  );
+
+  return {
+    minutes,
+    amount: Math.round(wage * minutes / 60),
+    breakMinutes
+  };
+}
+
+function renderWageSummary() {
+  const weekdayWage = Number(weekdayWageInput.value);
+  const holidayWage = Number(holidayWageInput.value);
+
+  const hasWeekdayWage =
+    weekdayWageInput.value.trim() !== "" &&
+    Number.isFinite(weekdayWage) &&
+    weekdayWage >= 0;
+
+  const hasHolidayWage =
+    holidayWageInput.value.trim() !== "" &&
+    Number.isFinite(holidayWage) &&
+    holidayWage >= 0;
+
+  const month = wageMonthInput.value;
+  const container = document.getElementById("wageDetails");
+
+  if (!month) {
+    container.innerHTML =
+      '<div class="empty-message">集計する月を選んでください。</div>';
+    return;
+  }
+
+  if (!hasWeekdayWage && !hasHolidayWage) {
+    document.getElementById("wageCount").textContent = "0回";
+    document.getElementById("wageHours").textContent = "0時間";
+    document.getElementById("wageTotal").textContent = "0円";
+
+    container.innerHTML =
+      '<div class="empty-message">平日時給と休日時給を入力してください。</div>';
+    return;
+  }
+
+  const workEvents = events
+    .filter(item =>
+      item.type === "work" &&
+      item.date &&
+      item.date.startsWith(month)
+    )
+    .sort((a, b) =>
+      a.date.localeCompare(b.date) ||
+      (a.start || "").localeCompare(b.start || "")
+    );
+
+  let totalMinutes = 0;
+  let totalAmount = 0;
+  let count = 0;
+
+  const details = workEvents.map(item => {
+    const holidayName = getHolidayName(item.date);
+    const isHoliday = Boolean(holidayName);
+
+    const applicableWage = isHoliday
+      ? holidayWage
+      : weekdayWage;
+
+    const hasApplicableWage = isHoliday
+      ? hasHolidayWage
+      : hasWeekdayWage;
+
+    const wageLabel = isHoliday
+      ? "休日時給"
+      : "平日時給";
+
+    if (!hasApplicableWage) {
+      return `
+        <div class="assignment-item">
+          <div class="assignment-info">
+            <div class="assignment-name">
+              ${escapeHTML(formatDate(item.date))}　アルバイト
+            </div>
+            <div class="assignment-due">
+              ${wageLabel}が未設定のため、この勤務は計算できません。
+            </div>
+          </div>
+          <button class="small-button" data-edit-work="${escapeHTML(item.id)}">予定を編集</button>
+        </div>`;
+    }
+
+    const result = calculateEventWage(item, applicableWage);
+
+    if (!result) {
+      return `
+        <div class="assignment-item">
+          <div class="assignment-info">
+            <div class="assignment-name">
+              ${escapeHTML(formatDate(item.date))}　アルバイト
+            </div>
+            <div class="assignment-due">
+              勤務時間が未設定、または時刻が正しくないため計算できません。
+            </div>
+            <div class="assignment-due">
+              適用予定：${wageLabel} ${applicableWage.toLocaleString("ja-JP")}円
+            </div>
+          </div>
+          <button class="small-button" data-edit-work="${escapeHTML(item.id)}">予定を編集</button>
+        </div>`;
+    }
+
+    count++;
+    totalMinutes += result.minutes;
+    totalAmount += result.amount;
+
+    return `
+      <div class="assignment-item">
+        <div class="assignment-info">
+          <div class="assignment-name">
+            ${escapeHTML(formatDate(item.date))}
+            ${isHoliday
+              ? `　<span class="holiday-wage-label">${escapeHTML(holidayName)}</span>`
+              : ""}
+          </div>
+          <div class="assignment-due">
+            ${escapeHTML(item.start)}〜${escapeHTML(item.end)}
+            ／ 休憩 ${result.breakMinutes}分
+          </div>
+          ${item.memo
+            ? `<div class="assignment-due">${escapeHTML(item.memo)}</div>`
+            : ""}
+          <div class="assignment-due">
+            適用時給：${wageLabel} ${applicableWage.toLocaleString("ja-JP")}円
+          </div>
+          <div class="assignment-due">
+            勤務時間：${Math.floor(result.minutes / 60)}時間${result.minutes % 60}分
+          </div>
+          <div class="assignment-due">
+            予想給料：${result.amount.toLocaleString("ja-JP")}円
+          </div>
+        </div>
+        <button class="small-button" data-edit-work="${escapeHTML(item.id)}">
+          予定を編集
+        </button>
+      </div>`;
+  });
+
+  document.getElementById("wageCount").textContent =
+    `${count}回`;
+
+  document.getElementById("wageHours").textContent =
+    `${Math.floor(totalMinutes / 60)}時間${totalMinutes % 60}分`;
+
+  document.getElementById("wageTotal").textContent =
+    `${totalAmount.toLocaleString("ja-JP")}円`;
+
+  container.innerHTML = details.length
+    ? details.join("")
+    : '<div class="empty-message">この月のアルバイト予定はありません。</div>';
+
+  container.querySelectorAll("[data-edit-work]").forEach(button => {
+    button.addEventListener("click", () => {
+      openEditEvent(button.dataset.editWork);
+    });
+  });
+}
+
+/* =====================================
+   課題一覧
+===================================== */
+
+function getAssignmentName(item) {
+  const memo = String(item.memo || "").trim();
+
+  return memo || "課題（名前未設定）";
+}
+
+function isSubmitted(item) {
+  return Boolean(item.submitted);
+}
+
+function renderAssignments() {
+  const container =
+    document.getElementById("assignmentList");
+
+  const taskEvents = events
+    .filter(item => item.type === "task")
+    .sort((a, b) => a.date.localeCompare(b.date));
+
+  if (taskEvents.length === 0) {
+    container.innerHTML =
+      '<div class="empty-message">課題はまだありません。カレンダーで「課題」を選び、課題名を入力してください。</div>';
+
+    return;
+  }
+
+  container.innerHTML = taskEvents.map(item => {
+    const submitted = isSubmitted(item);
+    const name = getAssignmentName(item);
+
+    return `
+      <div class="assignment-item">
+        <div class="assignment-info">
+          <div class="assignment-name">${escapeHTML(name)}</div>
+          <div class="assignment-due">
+            締め切り：${escapeHTML(formatDate(item.date))}
+          </div>
+          ${item.start
+            ? `<div class="assignment-due">時刻：${escapeHTML(item.start)}</div>`
+            : ""}
+          <span class="status-label ${submitted ? "submitted" : ""}">
+            ${submitted ? "提出済み" : "未提出"}
+          </span>
+        </div>
+
+        <div class="event-actions">
+          <button class="small-button" data-toggle-task="${escapeHTML(item.id)}">
+            ${submitted ? "未提出に戻す" : "提出済みにする"}
+          </button>
+          <button class="small-button" data-edit-task="${escapeHTML(item.id)}">
+            編集
+          </button>
+          <button class="danger-button" data-delete-task="${escapeHTML(item.id)}">
+            削除
+          </button>
+        </div>
+      </div>`;
+  }).join("");
+
+  container.querySelectorAll("[data-toggle-task]").forEach(button => {
+    button.addEventListener("click", () => {
+      const item = events.find(
+        event => event.id === button.dataset.toggleTask
+      );
+
+      if (!item) return;
+
+      item.submitted = !isSubmitted(item);
+
+      saveEvents();
+      renderAssignments();
+      renderCalendar();
+    });
+  });
+
+  container.querySelectorAll("[data-edit-task]").forEach(button => {
+    button.addEventListener("click", () => {
+      openEditEvent(button.dataset.editTask);
+    });
+  });
+
+  container.querySelectorAll("[data-delete-task]").forEach(button => {
+    button.addEventListener("click", () => {
+      deleteEvent(button.dataset.deleteTask);
+    });
+  });
+}
+
+/* =====================================
+   関連ページをまとめて更新
+===================================== */
+
+function renderAllLinkedPages() {
+  saveEvents();
+  renderCalendar();
+  renderWageSummary();
+  renderAssignments();
+  updateNotifications();
+}
+
+/* =====================================
+   初期表示
+===================================== */
+
+selectType("school");
+
+renderCalendar();
+renderWageSummary();
+renderAssignments();
+
+// 起動時は保存済みの通知を表示しない。新しい通知は指定時刻に作成する。
+notificationRecords = [];
+saveNotificationRecords();
+renderNotifications();
+scheduleNextNotificationCheck();
+
+</script>
+</body>
+</html>

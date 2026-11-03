@@ -1554,8 +1554,8 @@ const NOTIFICATION_KEY = "scheduleNotifications_v1";
 const LINK_KEY = "scheduleLinks_v1";
 
 const NOTIFICATION_DAYS = [14, 7, 3, 2, 1];
-const NOTIFICATION_HOUR = 15;
-const NOTIFICATION_MINUTE = 38;
+const NOTIFICATION_HOUR = 12;
+const NOTIFICATION_MINUTE = 30;
 const THEME_KEY = "scheduleTheme_v1";
 const themes = {
   rose: { background: "#fff5f7", accent: "#e986a2", soft: "#fde7ed", border: "#e9a4b6" },
@@ -2331,12 +2331,15 @@ function renderCalendar() {
       chip.className =
         `event-chip ${fixedTypes.includes(item.type) ? item.type : "school"}`;
 
+      const schoolMemoLine = item.type === "school" && item.memo
+        ? item.memo.split(/\r?\n/)[0].trim()
+        : "";
       const eventTitle = item.type === "work"
         ? "バイト"
         : item.type === "task"
           ? "課題"
           : item.type === "school"
-            ? "学校"
+            ? schoolMemoLine || "学校"
             : item.title || "予定";
 
       chip.textContent = eventTitle;

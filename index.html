@@ -1554,8 +1554,8 @@ const NOTIFICATION_KEY = "scheduleNotifications_v1";
 const LINK_KEY = "scheduleLinks_v1";
 
 const NOTIFICATION_DAYS = [14, 7, 3, 2, 1];
-const NOTIFICATION_HOUR = 13;
-const NOTIFICATION_MINUTE = 9;
+const NOTIFICATION_HOUR = 15;
+const NOTIFICATION_MINUTE = 38;
 const THEME_KEY = "scheduleTheme_v1";
 const themes = {
   rose: { background: "#fff5f7", accent: "#e986a2", soft: "#fde7ed", border: "#e9a4b6" },
@@ -2331,17 +2331,18 @@ function renderCalendar() {
       chip.className =
         `event-chip ${fixedTypes.includes(item.type) ? item.type : "school"}`;
 
-      let eventTitle =
-        item.title || typeNames[item.type] || "予定";
+      const eventTitle = item.type === "work"
+        ? "バイト"
+        : item.type === "task"
+          ? "課題"
+          : item.type === "school"
+            ? "学校"
+            : item.title || "予定";
 
-      if (item.type === "task" && item.memo) {
-        eventTitle = item.memo;
-      }
-
-      chip.textContent =
-        `${item.start ? item.start + " " : ""}${eventTitle}`;
-
-      chip.title = eventTitle;
+      chip.textContent = eventTitle;
+      chip.title = item.start
+        ? `${eventTitle}（${item.start}${item.end ? "〜" + item.end : ""}）`
+        : eventTitle;
 
       chip.addEventListener("click", event => {
         event.stopPropagation();
